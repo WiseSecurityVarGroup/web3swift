@@ -14,7 +14,7 @@ let package = Package(
     dependencies: [
         .package(url: "https://github.com/attaswift/BigInt.git", .upToNextMinor(from: "5.4.0")),
         .package(url: "https://github.com/krzyzanowskim/CryptoSwift.git", from: "1.5.1"),
-        .package(name: "secp256k1", url: "https://github.com/GigaBitcoin/secp256k1.swift", exact: "0.21.1")
+        .package(url: "https://github.com/Boilertalk/secp256k1.swift.git", from: "0.1.0")
     ],
     targets: [
         .target(
