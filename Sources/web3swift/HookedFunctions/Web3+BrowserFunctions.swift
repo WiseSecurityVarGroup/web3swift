@@ -45,16 +45,25 @@ extension Web3.BrowserFunctions {
         }
     }
 
-    public func personalECRecover(_ personalMessage: String, signature: String) -> String? {
+    static func personalECRecover(_ personalMessage: String, signature: String) -> EthereumAddress? {
         guard let data = Data.fromHex(personalMessage) else { return nil }
         guard let sig = Data.fromHex(signature) else { return nil }
-        return self.personalECRecover(data, signature: sig)
+        return Utilities.personalECRecover(data, signature: sig)
     }
 
-    public func personalECRecover(_ personalMessage: Data, signature: Data) -> String? {
+    /// Recover the Ethereum address from recoverable secp256k1 signature. Message is first hashed using the "personal hash" protocol.
+    /// BE WARNED - changing a message will result in different Ethereum address, but not in an error.
+    public static func personalECRecover(_ personalMessage: Data, signature: Data) -> EthereumAddress? {
+        guard let hash = Utilities.hashPersonalMessage(personalMessage) else { return nil }
+        return hashECRecover(hash: hash, signature: signature)
+    }
+
+    /// Recover the Ethereum address from recoverable secp256k1 signature.
+    /// Takes a hash of some message. What message is hashed should be checked by user separately.
+    public static func hashECRecover(hash: Data, signature: Data) -> EthereumAddress? {
         if signature.count != 65 { return nil }
-        let rData = signature[0..<32].bytes
-        let sData = signature[32..<64].bytes
+        let rData: [UInt8] = Array(signature.prefix(32))
+        let sData: [UInt8] = Array(signature.dropFirst(32).prefix(32))
         var vData = signature[64]
         if vData >= 27 && vData <= 30 {
             vData -= 27
@@ -64,9 +73,8 @@ extension Web3.BrowserFunctions {
             vData -= 35
         }
         guard let signatureData = SECP256K1.marshalSignature(v: vData, r: rData, s: sData) else { return nil }
-        guard let hash = Utilities.hashPersonalMessage(personalMessage) else { return nil }
         guard let publicKey = SECP256K1.recoverPublicKey(hash: hash, signature: signatureData) else { return nil }
-        return Utilities.publicToAddressString(publicKey)
+        return Utilities.publicToAddress(publicKey)
     }
 
 //    // FIXME: Rewrite this to CodableTransaction
